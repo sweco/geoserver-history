@@ -1,0 +1,7 @@
+# Maven SDL
+target/
+
+# Eclipse
+.classpath
+.project
+.settings
