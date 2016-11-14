@@ -13,6 +13,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.xpath.XPathAPI;
 import org.geoserver.platform.Service;
 import org.geoserver.platform.ServiceException;
@@ -26,7 +27,7 @@ import com.mockrunner.mock.web.MockServletOutputStream;
 
 
 public class DefaultServiceExceptionHandlerTest extends TestCase {
-    
+
     private DefaultServiceExceptionHandler handler;
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -34,7 +35,7 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         HelloWorld helloWorld = new HelloWorld();
         Service service = new Service("hello", helloWorld, new Version("1.0.0"),Collections.singletonList("hello"));
 
@@ -53,7 +54,7 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
         response = new MockHttpServletResponse();
 
         handler = new DefaultServiceExceptionHandler();
-        
+
         requestInfo = new Request();
         requestInfo.setHttpRequest(request);
         requestInfo.setHttpResponse(response);
@@ -80,7 +81,7 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
 
     public void testHandleServiceExceptionEncoding() throws Exception {
         String message = "foo & <foo> \"foo's\"";
-        
+
         ServiceException exception = new ServiceException(message);
         exception.setLocator("test-locator");
 
@@ -92,12 +93,12 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
         docBuilderFactory.setNamespaceAware(true);
 
         Document doc = docBuilderFactory.newDocumentBuilder().parse(input);
-        
+
         Node exceptionText = XPathAPI.selectSingleNode(doc, "ows:ExceptionReport/ows:Exception/ows:ExceptionText/text()");
         assertNotNull(exceptionText);
         assertEquals("round-tripped through character entities", message, exceptionText.getTextContent());
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testHandleServiceExceptionEncodingMore() throws Exception {
         String message1 = "foo & <foo> \"foo's\"";
@@ -115,11 +116,11 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
         docBuilderFactory.setNamespaceAware(true);
 
         Document doc = docBuilderFactory.newDocumentBuilder().parse(input);
-        
+
         Node exceptionText = XPathAPI.selectSingleNode(doc, "ows:ExceptionReport/ows:Exception/ows:ExceptionText/text()");
         assertNotNull(exceptionText);
-        String message = message1 + "\n" + message2;
-        assertEquals("round-tripped through character entities", message, exceptionText.getTextContent());
+        String message = message1 + " " + message2;
+        assertEquals("round-tripped through character entities", message, trim(exceptionText.getTextContent()));
     }
 
     public void testHandleServiceExceptionCauses() throws Exception {
@@ -142,8 +143,17 @@ public class DefaultServiceExceptionHandlerTest extends TestCase {
         Document doc = docBuilderFactory.newDocumentBuilder().parse(input);
         Node exceptionText = XPathAPI.selectSingleNode(doc, "ows:ExceptionReport/ows:Exception/ows:ExceptionText/text()");
         assertNotNull(exceptionText);
-        assertTrue(exceptionText.getNodeValue().indexOf(illegalArgument.getMessage()) != -1);
-        assertTrue(exceptionText.getNodeValue().indexOf(ioException.getMessage()) != -1);
-        assertTrue(exceptionText.getNodeValue().indexOf(serviceException.getMessage()) != -1);
+        String nodeValue = trim(exceptionText.getNodeValue());
+        assertTrue(nodeValue.indexOf(illegalArgument.getMessage()) != -1);
+        assertTrue(nodeValue.indexOf(ioException.getMessage()) != -1);
+        assertTrue(nodeValue.indexOf(serviceException.getMessage()) != -1);
     }
+
+    private String trim(final String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.trim().replaceAll("\\s+", " ");
+    }
+
 }
