@@ -53,7 +53,7 @@ import org.geotools.util.Version;
  * By default, no DTD or XML Schema reference will be included in the document. The methods
  * {@link #setDTDLocation(String)} and {@link #setSchemaLocation(String)} can be used to override
  * this behaviour. Only one of these methods should be set per instance of this class.
- * 
+ *
  * The supplied value should be relative to the web application context root.
  * </p>
  * <p>
@@ -61,10 +61,10 @@ import org.geotools.util.Version;
  * The default content type for the created document is <code>text/xml</code>, this can be
  * overridden with {@link #setContentType(String)}.
  * </p>
- * 
+ *
  * @author Justin Deoliveira
  * @author Gabriel Roldan
- * 
+ *
  */
 public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
 
@@ -88,7 +88,7 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
 
     /**
      * Creates a new exception handler for WMS exceptions
-     * 
+     *
      * @param services
      *            the {@link WMSInfo}s this handler writes exceptions for
      * @param geoServer
@@ -136,25 +136,25 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
         return "application/vnd.ogc.se_inimage".equals(exceptions) || "INIMAGE".equals(exceptions)
             || "BLANK".equals(exceptions);
     }
-    
+
     private void handleImageException(ServiceException exception, Request request, final int width,
             final int height, final String format, String exceptionFormat, Color bgcolor, Boolean transparent) {
-       
+
         if ("BLANK".equals(exceptionFormat) && bgcolor == null && Boolean.TRUE.equals(transparent)) {
             bgcolor = new Color(0, 0, 0, 0);
         }
-        
+
         if (bgcolor == null) {
             bgcolor = Color.WHITE;
         }
-        
-        
+
+
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D g = (Graphics2D) img.getGraphics();
-        
+
         g.setColor(bgcolor);
         g.fillRect(0, 0, img.getWidth(), img.getHeight());
-        
+
         if (!"BLANK".equals(exceptionFormat)) { //wms 1.3 only
             g.setColor(Color.BLACK);
 
@@ -187,7 +187,7 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
 
         //Location of schema for document.
         String schemaLocation = null;
-        
+
         //The content type of the produced document
         String contentType;
 
@@ -203,8 +203,8 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
             schemaLocation = "wms/1.3.0/exceptions_1_3_0.xsd";
             contentType = "text/xml";
         }
-        
-        
+
+
         String tab = "   ";
         StringBuffer sb = new StringBuffer();
 
@@ -245,12 +245,12 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
 
         // exception code
         if ((exception.getCode() != null) && !exception.getCode().equals("")) {
-            sb.append(" code=\"" + exception.getCode() + "\"");
+            sb.append(" code=\"" + ResponseUtils.encodeXML(exception.getCode()) + "\"");// TODO! SEMARA - XML-esacping of code - prevent XSS vulnerability !
         }
 
         // exception locator
         if ((exception.getLocator() != null) && !exception.getLocator().equals("")) {
-            sb.append(" locator=\"" + exception.getLocator() + "\"");
+            sb.append(" locator=\"" + ResponseUtils.encodeXML(exception.getLocator()) + "\"");// TODO? SEMARA - XML-esacping of code - prevent XSS vulnerability ?
         }
 
         sb.append(">");
@@ -320,7 +320,7 @@ public class WMSServiceExceptionHandler extends ServiceExceptionHandler {
 
     /**
      * Paint the provided text onto the graphics wrapping words at the specified lineWidth.
-     * 
+     *
      * @param g
      *            the Graphics2D which will be used to draw the text
      * @param text
